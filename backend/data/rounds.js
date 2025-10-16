@@ -1,15 +1,15 @@
 const rounds = [
   {
     id: 1,
-    title: "Round 1 - Complexity (Supply Lag)",
+    title: "Round 1",
     question: "Your clients use many different accounting systems, and RPA integration is difficult. Do you want to hire an external consultant to start RPA now?",
     choices: [
       {
         id: "yes",
         label: "YES",
         points: 2,
-        delay: "Skip next round (integration delay)",
-        explanation: "Active choice but faces technical complexity",
+        delay: "Skip next round (Supply lag)",
+        explanation: "You face technical integration delays and must skip this round.",
         skipNextRound: true
       },
       {
@@ -24,7 +24,7 @@ const rounds = [
   },
   {
     id: 2,
-    title: "Round 2 - Trialability (Supply Lag)",
+    title: "Round 2",
     question: "A vendor offers a 3-month free RPA trial. Do you want to join the trial?",
     choices: [
       {
@@ -47,15 +47,15 @@ const rounds = [
   },
   {
     id: 3,
-    title: "Round 3 - Compatibility (Regulation Lag)",
+    title: "Round 3",
     question: "The government released a new data standard (SAF-T) but it's not yet mandatory. Do you want to upgrade your system early?",
     choices: [
       {
         id: "yes",
         label: "YES",
         points: 2,
-        delay: "Skip next round (upgrade takes time)",
-        explanation: "Proactive but short-term delay",
+        delay: "Skip next round (Regulation Lag)",
+        explanation: "Your firm is updating systems to meet new audit standards. You must pause for this round while implementation is in progress.",
         skipNextRound: true
       },
       {
@@ -70,7 +70,7 @@ const rounds = [
   },
   {
     id: 4,
-    title: "Round 4 - Observability (Demand Lag)",
+    title: "Round 4",
     question: "Other firms show their RPA success and time savings. Do you want to make your own RPA progress public?",
     choices: [
       {
@@ -93,15 +93,15 @@ const rounds = [
   },
   {
     id: 5,
-    title: "Round 5 - Relative Advantage (Demand Lag)",
+    title: "Round 5",
     question: "A new RPA plan can increase efficiency by 20%, but it's expensive. Do you want to pay for it?",
     choices: [
       {
         id: "yes",
         label: "YES",
         points: 2,
-        delay: "Skip next round (budget pressure)",
-        explanation: "Long-term gain, short-term cost",
+        delay: "Skip next round (Demand Lag)",
+        explanation: "High RPA investment costs have slowed your short-term progress.",
         skipNextRound: true
       },
       {
@@ -116,7 +116,7 @@ const rounds = [
   },
   {
     id: 6,
-    title: "Round 6 - Innovation Mindset (No Lag)",
+    title: "Round 6",
     question: "Your firm is stable and profitable. Would you still invest in RPA now to drive future innovation?",
     choices: [
       {

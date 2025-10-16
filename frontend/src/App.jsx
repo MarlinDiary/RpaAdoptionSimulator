@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState } from 'react'
 import RoomPasswordInput from './components/RoomPasswordInput'
 import GameRoom from './components/GameRoom'
+import JoinRoom from './components/JoinRoom'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -35,7 +36,7 @@ function App() {
         />
         <Route
           path="/join/:roomId"
-          element={<GameRoom isHost={false} />}
+          element={<JoinRoom />}
         />
       </Routes>
     </BrowserRouter>

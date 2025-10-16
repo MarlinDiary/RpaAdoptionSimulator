@@ -17,6 +17,10 @@ function RoundDisplay({ round, roomId, onNextRound }) {
     }
   }, [])
 
+  useEffect(() => {
+    setVotes({})
+  }, [round.id])
+
   // Calculate vote counts for each choice
   const getVoteCount = (choiceId) => {
     return Object.values(votes).filter(vote => vote === choiceId).length

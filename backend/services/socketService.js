@@ -1,7 +1,7 @@
 const { Server } = require('socket.io');
 const { rounds } = require('../data/rounds');
 
-// Room storage: { roomId: { host: socketId, participants: [{socketId, nickname, score, skipNextRound}], lastActivity: timestamp, currentRound: number, votes: {} } }
+// Room storage: { roomId: { host: socketId, participants: [{socketId, nickname, score, skipNextRound}], lastActivity: timestamp, currentRound: number, votes: {}, isGameOver: boolean } }
 const rooms = new Map();
 
 // Cleanup interval: check every minute for rooms to remove
@@ -66,7 +66,8 @@ function initialize(server) {
           participants: isHost ? [] : [socket.id],
           lastActivity: Date.now(),
           currentRound: 0,
-          votes: {}
+          votes: {},
+          isGameOver: false
         };
 
         rooms.set(roomId, room);
@@ -172,8 +173,47 @@ function initialize(server) {
         return;
       }
 
+      if (room.isGameOver) {
+        socket.emit('error', { message: 'Game already finished' });
+        return;
+      }
+
+      if (room.currentRound >= rounds.length) {
+        room.isGameOver = true;
+        room.votes = {};
+        room.lastActivity = Date.now();
+
+        const leaderboard = room.participants
+          .map(participant => {
+            if (typeof participant === 'object') {
+              return {
+                socketId: participant.socketId,
+                nickname: participant.nickname,
+                score: participant.score
+              };
+            }
+
+            return {
+              socketId: participant,
+              nickname: 'Anonymous',
+              score: 0
+            };
+          })
+          .sort((a, b) => b.score - a.score);
+
+        io.to(roomId).emit('game-finished', {
+          roomId,
+          leaderboard
+        });
+
+        console.log(`Game finished in room ${roomId}`);
+        console.log('Final leaderboard:', leaderboard);
+        return;
+      }
+
       // Increment round and reset votes
       room.currentRound += 1;
+      room.isGameOver = false;
       room.votes = {};
       room.lastActivity = Date.now();
 
@@ -210,8 +250,14 @@ function initialize(server) {
       // Find and update rooms
       for (const [roomId, room] of rooms.entries()) {
         if (room.host === socket.id) {
-          room.host = null;
-          console.log(`Host left room ${roomId}`);
+          io.to(roomId).emit('room-closed', { roomId });
+          console.log(`Host left room ${roomId}. Room destroyed.`);
+
+          // Remove all sockets from the room
+          io.in(roomId).socketsLeave(roomId);
+
+          rooms.delete(roomId);
+          continue;
         }
 
         const participantIndex = room.participants.findIndex(p => {

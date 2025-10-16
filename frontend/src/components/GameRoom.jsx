@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { connectSocket, getSocket } from '../services/socket'
 import RoundDisplay from './RoundDisplay'
+import Leaderboard from './Leaderboard'
 import { rounds } from '../data/rounds'
 
 function GameRoom({ isHost }) {
@@ -9,6 +10,8 @@ function GameRoom({ isHost }) {
   const [roomId, setRoomId] = useState('')
   const [participantCount, setParticipantCount] = useState(0)
   const [currentRound, setCurrentRound] = useState(0)
+  const [isGameFinished, setIsGameFinished] = useState(false)
+  const [leaderboard, setLeaderboard] = useState([])
 
   useEffect(() => {
     // Generate room ID
@@ -42,7 +45,15 @@ function GameRoom({ isHost }) {
       if (skippedParticipants && skippedParticipants.length > 0) {
         console.log('Skipped participants:', skippedParticipants)
       }
+      setIsGameFinished(false)
+      setLeaderboard([])
       setCurrentRound(roundNumber)
+    })
+
+    socket.on('game-finished', ({ leaderboard: finalLeaderboard }) => {
+      console.log('Game finished, leaderboard:', finalLeaderboard)
+      setIsGameFinished(true)
+      setLeaderboard(finalLeaderboard || [])
     })
 
     // Create room when connected
@@ -61,12 +72,18 @@ function GameRoom({ isHost }) {
       socket.off('participant-joined')
       socket.off('participant-left')
       socket.off('round-started')
+      socket.off('game-finished')
     }
   }, [isHost])
 
   const handleNextRound = () => {
+    if (!roomId || isGameFinished) return
     const socket = getSocket()
     socket.emit('next-round', { roomId })
+  }
+
+  if (isGameFinished) {
+    return <Leaderboard leaderboard={leaderboard} />
   }
 
   // If round is active, show round display

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { connectSocket } from '../services/socket'
 import VotingInterface from './VotingInterface'
 import { rounds } from '../data/rounds'
+import Leaderboard from './Leaderboard'
 
 function JoinRoom() {
   const { roomId } = useParams()
@@ -11,6 +12,9 @@ function JoinRoom() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [currentRound, setCurrentRound] = useState(0)
   const [isSkipped, setIsSkipped] = useState(false)
+  const [isGameFinished, setIsGameFinished] = useState(false)
+  const [leaderboard, setLeaderboard] = useState([])
+  const [isRoomClosed, setIsRoomClosed] = useState(false)
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -45,12 +49,30 @@ function JoinRoom() {
       console.log('Skipped participants:', skippedParticipants)
       console.log('My socket ID:', socket.id)
 
+      setIsGameFinished(false)
+      setLeaderboard([])
       setCurrentRound(roundNumber)
 
       // Check if this participant should skip
       const isThisUserSkipped = skippedParticipants?.some(p => p.socketId === socket.id)
       console.log('Am I skipped?', isThisUserSkipped)
       setIsSkipped(isThisUserSkipped || false)
+    })
+
+    socket.on('game-finished', ({ leaderboard: finalLeaderboard }) => {
+      console.log('Game finished, leaderboard:', finalLeaderboard)
+      setIsGameFinished(true)
+      setLeaderboard(finalLeaderboard || [])
+      setIsSkipped(false)
+    })
+
+    socket.on('room-closed', () => {
+      console.log('Room closed by host')
+      setIsRoomClosed(true)
+      setIsGameFinished(false)
+      setLeaderboard([])
+      setIsSkipped(false)
+      setCurrentRound(0)
     })
 
     // Join room when connected
@@ -70,6 +92,8 @@ function JoinRoom() {
       socket.off('participant-joined')
       socket.off('participant-left')
       socket.off('round-started')
+      socket.off('game-finished')
+      socket.off('room-closed')
     }
   }, [isSubmitted, roomId, nickname, navigate])
 
@@ -78,6 +102,29 @@ function JoinRoom() {
     if (nickname.trim()) {
       setIsSubmitted(true)
     }
+  }
+
+  if (isSubmitted && isGameFinished) {
+    return <Leaderboard leaderboard={leaderboard} />
+  }
+
+  if (isRoomClosed) {
+    return (
+      <div className="min-h-screen w-screen bg-white flex items-center justify-center overflow-hidden p-8">
+        <div className="max-w-2xl w-full text-center space-y-6">
+          <h1 className="text-3xl font-bold text-black">Room Closed</h1>
+          <p className="text-lg text-gray-600">
+            The host has left and the room is no longer available.
+          </p>
+          <button
+            onClick={() => navigate('/', { replace: true })}
+            className="py-3 px-12 bg-black text-white rounded-full font-semibold hover:bg-[#404040] active:bg-black transition-all text-lg cursor-pointer"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // Show skipped round message if participant is skipped
